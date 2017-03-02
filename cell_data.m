@@ -16,28 +16,28 @@ T=60 +273.15; %cell temperature, in Kelvin
 rb87_abundance = 0.98; %natural abundance of 87Rb. Set to 1 for 100% 87Rb cell
 Rb=RbProperties(T,rb87_abundance);
 
-%%%%% Cell and laser beam dimensions
+%%%%% Cell dimensions
 cell_shape = 'cylinder'; % 'sphere', 'cylinder', rectangle'
 if strcmp(cell_shape, 'sphere')
-    cell_radius = 0.5*mm; % (optical path length)
+    cell_radius = 0.5*mm; 
     cell_dimensions = cell_radius;
-    optical_path_length = cell_radius;
+    optical_path_length = cell_radius*2;
 elseif strcmp(cell_shape, 'cylinder')
     cell_radius = 0.5*mm; 
     cell_thickness = 37.5*mm; % (optical path length
     cell_dimensions = [cell_radius, cell_thickness];
     optical_path_length = cell_thickness;
 elseif strcmp(cell_shape, 'rectangle')
-    a = 6*mm; % transverse dimensions
-    b = 6*mm; % transverse dimensions
+    a = 6*mm; % transverse dimension 1
+    b = 6*mm; % transverse dimension 2
     c = 200*mum; % cell thickness (optical path length)
     cell_dimensions = [a, b, c];
     optical_path_length=c;
 end
 
 %%%%% Buffer gas properties %%%%%%%
-bgas=['N2']; % buffer gas types (as many as you want, e.g. ['Kr'; 'N2'])
-Pbuffer_fill=[11]*torr; %buffer gas pressure, e.g. [10; 25]*mbar. Vector length must match bgas
+bgas=['N2'; 'Kr']; % buffer gas types (as many as you want, e.g. ['Kr'; 'N2'])
+Pbuffer_fill=[11 20]*torr; %buffer gas pressure, e.g. [10; 25]*mbar. Vector length must match bgas
 Tfill = 25+273.15; % temperature at which Pbuffer is defined, default 25+273.15 kelvin
 
 %%%% alternative input method for buffer gas pressure:
@@ -57,15 +57,16 @@ Delta = 2*pi*(266.65/2)*1e6; %laser locked to Fg=2->Fe=2/3 crossover
 
 %% Collisional broadening and shifts
 
-Buffer = BufferShiftBroadeningFunc(T,Pbuffer_fill,Tfill,bgas,Rb);
+Buffer = BufferShiftBroadeningFunc(T,Pbuffer_fill,Tfill,bgas);
 
 %% T1 and T2 lifetimes
 
 [T1, T2, gamma] = ...
-    RelaxationFunc(cell_shape,cell_dimensions,T,Pbuffer_fill,Tfill,bgas,Rb);
-% gamma.SE1, gamma.SE2, gamma.walls, gamma.bg1, gamma.bg2
+    RelaxationFunc(cell_shape,cell_dimensions,T,Pbuffer_fill,Tfill,bgas);
+% gamma output: gamma.SE1, gamma.SE2, gamma.walls, gamma.bg1, gamma.bg2
 
 %% Diffusion rates:
+% adjust diff_time.a-c as needed
 diff_time.a = 10*mus;
 diff_time.b = 20*mus;
 diff_time.c = 50*mus;
@@ -85,12 +86,12 @@ OD87=Esus_out.OD87_p;
 
 %% Printing out results:
 
-fprintf('/MATLAB/Vapor Cell (Matlab/Hellma_cell/Hellma_100_cell_data.m \n');
+fprintf('%s \n',[mfilename('fullpath') '.m']);
 fprintf('\n');
 fprintf('Cell Temperature = %g degC \n', T-273.15);
 fprintf('Optical path length = %g mm \n', optical_path_length/mm);
 for i=1:length(Pbuffer_fill)
-fprintf('%s %g = %0.3g mbar %s (fill)  \n', 'Buffer gas',i, Pbuffer_fill(i)/mbar, bgas(i,:));
+fprintf('%s %g = %0.3g mbar %s (at Tfill=%gdegC)  \n', 'Buffer gas',i, Pbuffer_fill(i)/mbar, bgas(i,:),Tfill-273.15);
 end
 fprintf('MW shift = %0.3g kHz \n', Buffer.MW_shift/kHz);
 fprintf('Optical buffer shift = %0.3g MHz \n', Buffer.OptShift/MHz);
@@ -103,10 +104,10 @@ fprintf('Total Rb density = %0.3g atoms/cm^3 \n', Rb.density_total*cm^3);
 fprintf('87Rb density = %0.3g atoms/cm^3 (87Rb abundance = %g) \n', Rb.density_87*cm^3, rb87_abundance);
 fprintf('\n');
 fprintf('Mean free path, Rb-Rb = %0.3g mm \n', Rb.lambda_rbrb/mm);
-for i=1:length(Pbuffer_fill)
-fprintf('Mean free path, Rb-buffer %g = %0.3g nm\n',i, Buffer.t_mfp_sigma(i)/nm);
-end
-fprintf('Mean free path, Rb-buffer total = %0.3g um\n', Buffer.mfp_rbbg);
+if length(Pbuffer_fill)>1; for i=1:length(Pbuffer_fill)
+fprintf('Mean free path, Rb-%s = %0.3g um\n',bgas(i,:),Buffer.t_mfp_sigma(i)/mum);
+end; end
+fprintf('Mean free path, Rb-buffer total = %0.3g um\n', Buffer.mfp_rbbg/mum);
 fprintf('Collision rate Rb-Rb (total) = %g /s \n', Rb.gamma_rbrb_total);
 fprintf('Collision rate Rb-buffer (total) = %g /s \n', Buffer.gamma_rbbg_total);
 fprintf('quenching rate = %g /s \n', Buffer.RQ);

@@ -1,4 +1,4 @@
-function output = BufferShiftBroadeningFunc(T,Pbuffer_fill,Tfill,bgas,Rb)
+function output = BufferShiftBroadeningFunc(T,Pbuffer_fill,Tfill,bgas)
 % Outputs line shifts and broadening for 87Rb optical (D1/2) and microwave
 % (hyperfine ground state) transitions. Also outputs the Rb diffusion
 % constant and mean-free-path. The script can be adapted for other 
@@ -9,14 +9,23 @@ function output = BufferShiftBroadeningFunc(T,Pbuffer_fill,Tfill,bgas,Rb)
 %
 % Andrew Horsley 2017
 
-constants; units; BufferGasProperties;
+GHz=1e9;
+clight=2.99792458e8; % Speed of Light
+kB=1.3806504e-23; % Boltzmann's Constant
+m87Rb=1.443160648e-25; % Rb87 Atomic Mass
+om0=2*pi*384.2304844685e12; % Frequency D2 Transition (also use for D1 line broadening - error is ~2%)
+p_atmoshperic=101325; % atmospheric pressure, in Pascals
+
+BufferGasProperties;
+
 n_buffer= Pbuffer_fill/kB/Tfill; % derived buffer density, in m^3
+v_av_rb= sqrt(8*kB.*T/pi/m87Rb); %Average Rb velocity
 
 for i=1:length(Pbuffer_fill)
     t_bgas=bgas(i,:);
     
     v_av_bg(i)=sqrt(8*kB*T/pi/mass.(t_bgas));
-    vrel_rbbg(i) = sqrt(Rb.v_av_rb^2+v_av_bg(i)^2);
+    vrel_rbbg(i) = sqrt(v_av_rb^2+v_av_bg(i)^2);
     t_gamma_rbbg_total(i)=n_buffer(i)*sigma_total.(t_bgas)(1)*vrel_rbbg(i)*(T/sigma_total.(t_bgas)(2))^sigma_total.(t_bgas)(3); % buffer T1 relaxation rate
     t_gamma_1bg(i)=n_buffer(i)*sigma_1.(t_bgas)(1)*vrel_rbbg(i)*(T/sigma_1.(t_bgas)(2))^sigma_1.(t_bgas)(3); % buffer T1 relaxation rate
     t_gamma_2bg(i)=n_buffer(i)*sigma_2.(t_bgas)(1)*vrel_rbbg(i)*(T/sigma_2.(t_bgas)(2))^sigma_2.(t_bgas)(3); % buffer T2 relaxation rate

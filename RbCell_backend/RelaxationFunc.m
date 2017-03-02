@@ -1,4 +1,4 @@
-function [T1, T2, gamma] = RelaxationFunc(cell_shape,cell_dimensions,T,Pbuffer_fill,Tfill,bgas,Rb)
+function [T1, T2, gamma] = RelaxationFunc(cell_shape,cell_dimensions,T,Pbuffer_fill,Tfill,bgas)
 % Calculates T1 and T2 times, and the associated relaxation rates, for Rb87
 % in an atomic vapor cell. The script can be adapted for other alkali
 % species by inputting the appropriate constants.
@@ -14,12 +14,31 @@ function [T1, T2, gamma] = RelaxationFunc(cell_shape,cell_dimensions,T,Pbuffer_f
 constants; units; BufferGasProperties;
 
 n_buffer= Pbuffer_fill/kB/Tfill; % derived buffer density, in m^3
+
+%% Rb properties
+I=3/2; % Rb87 nuclear spin
+sigma_rbrb_SE = 1.9*10^-14*cm^2; %spin exchange cross section for rb, Walter (2002)
+
+if T-273.15<39.3
+    P= 10.^(2.881+4.857-4215./T)*torr; % Steck. Total Rb pressure with Rb in solid phase, in Pa
+%     P = 133.323 * 10.^(-94.04826-1961.258./T-0.03771687*T+42.57526*log10(T));
+else
+    P = 10.^(2.881+4.312-4040./T)*torr; % Steck. Total Rb pressure with Rb in liquid phase, in Torr
+%     P = 133.323 * 10.^(15.88253-4529.635./T+0.00058663*T-2.99138*log10(T));
+end
+density_total=P/kB./T; %Total Rb density at T, in m^3
+
+v_av_rb= sqrt(8*kB.*T/pi/m87Rb); %Average Rb velocity
+vrel_rbrb = sqrt(2)*v_av_rb; %Rb-Rb rel velocity
+gamma_rbrb_SE=density_total*sigma_rbrb_SE.*vrel_rbrb; %SE collision rate
+
 %% buffer gas relaxation, diffusion constant
+
 for i=1:length(Pbuffer_fill)
     t_bgas=bgas(i,:);
     
     v_av_bg(i)=sqrt(8*kB*T/pi/mass.(t_bgas));
-    vrel_rbbg(i) = sqrt(Rb.v_av_rb^2+v_av_bg(i)^2);
+    vrel_rbbg(i) = sqrt(v_av_rb^2+v_av_bg(i)^2);
     
     t_gamma_bg1(i)=n_buffer(i)*sigma_1.(t_bgas)(1)*vrel_rbbg(i)*(T/sigma_1.(t_bgas)(2))^sigma_1.(t_bgas)(3); % buffer T1 relaxation rate
     t_gamma_bg2(i)=n_buffer(i)*sigma_2.(t_bgas)(1)*vrel_rbbg(i)*(T/sigma_2.(t_bgas)(2))^sigma_2.(t_bgas)(3); % buffer T2 relaxation rate
@@ -56,8 +75,7 @@ gamma.walls = diff_coeff*k2;
 % From atomic freq. standards book (Vanier), the relationship
 % between T1 and T2 spin-exchange relazation is given as 
 % Gamma2 = (6I+1)/(8I+1) Gamma1 = 10/13 Gamma1 for Rb87
-I=3/2; % Rb87 nuclear spin
-gamma.SE1 = Rb.gamma_rbrb_SE; %Characteristic time for spin exchange collisions
+gamma.SE1 = gamma_rbrb_SE; %Characteristic time for spin exchange collisions
 gamma.SE2 = (6*I+1)/(8*I+1)*gamma.SE1; %Characteristic time for spin exchange collisions
 
 %% T1 and T2 times, combining all relaxation mechanisms

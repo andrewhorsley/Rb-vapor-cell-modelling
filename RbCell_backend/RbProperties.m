@@ -15,12 +15,13 @@ function output = RbProperties(T,rb87_abundance)
 %
 % Andrew Horsley, 2015
 
-units; constants;
+cm=1e-2; 
+torr=133.322368;
+kB=1.3806504e-23; % Boltzmann's Constant
+m87Rb=1.443160648e-25; % Rb87 Atomic Mass
 
-I=3/2; %nuclear spin
 sigma_rbrb_total = 1397*10^-16*cm^2; %total cross section for rb-rb collision, Croucher(1969)
 sigma_rbrb_SE = 1.9*10^-14*cm^2; %spin exchange cross section for rb, Walter (2002)
-
 
 if T-273.15<39.3
     P= 10.^(2.881+4.857-4215./T)*torr; % Steck. Total Rb pressure with Rb in solid phase, in Pa

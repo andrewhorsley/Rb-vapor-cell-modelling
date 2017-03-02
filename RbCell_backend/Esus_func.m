@@ -1,6 +1,7 @@
 function output=Esus_func(Dline,Bdc,T,L,purity,Delta,n_buffer,bgas)
 % output=Esus_func(Dline,Bdc,T,L,purity,Delta,n_buffer,bgas)
-% 
+% requires RbDlines_func
+%
 % Andrew Horsley, 25/1/2016
 %
 % Electric susceptibility for light travelling through a vapor cell

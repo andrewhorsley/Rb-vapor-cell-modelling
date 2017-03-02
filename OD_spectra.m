@@ -1,4 +1,4 @@
-% Calculates the optical density (absorption) spectrum for a Rb vapor cell:
+% Plots the optical density (absorption) spectrum for a Rb vapor cell:
 % D1 or D2 line; arbitrary cell temperature, cell length, buffer gas
 % mixtures; arbitrary background dc magnetic field amplitude
 %
@@ -12,7 +12,7 @@ units;constants;plotcolors;
 %% Input parameters
 purity =0.2783; % abundance of 87Rb in cell (natural = 0.2783)
 Dline='D2'; % choices are 'D1' or 'D2'
-Bdc=0; % dc magnetic field in tesla
+Bdc=0.5; % dc magnetic field in tesla
 T = 150+273.15; % cell temperature, e.g. 100+273.15
 L = 2*mm; % cell length, e.g. 5*mm
 
